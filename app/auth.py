@@ -26,8 +26,10 @@ def activate():
             number = request.args['auth']
             
             db = get_db()
-            attempt = db.execute('SELECT * FROM activationlink WHERE challenge=? AND state=?', (number, utils.U_UNCONFIRMED)
+            attempt = db.execute(
+                'SELECT * FROM activationlink WHERE challenge=? AND state=?', (number, utils.U_UNCONFIRMED)
             ).fetchone()
+
             if attempt is not None:
                 db.execute(
                     'UPDATE activationlink SET state=? WHERE id=?', (utils.U_CONFIRMED, attempt['id'])
@@ -96,8 +98,8 @@ def register():
             hashP = generate_password_hash(password + salt)
             number = hex(random.getrandbits(512))[2:]
 
-            db.execuuserte(
-                'INSERT INTO activationlink (challenge,state,name,password,salt,email) VALUES(?,?,?,?,?,?)',
+            db.execute(
+                'INSERT INTO activationlink (challenge,state,username,password,salt,email) VALUES(?,?,?,?,?,?)',
                 (number, utils.U_UNCONFIRMED, username, hashP, salt, email)
             )
             db.commit()
@@ -156,7 +158,8 @@ def confirm():
             ).fetchone()
             
             if attempt is not None:                                
-                db.execute('UPDATE forgotlink SET state=? WHERE id=?', (utils.F_INACTIVE, attempt['id']))                
+                db.execute('UPDATE forgotlink SET state=? WHERE id=?', (utils.F_INACTIVE, attempt['id']))
+                #db.commit()
                 salt = hex(random.getrandbits(128))[2:]
                 hashP = generate_password_hash(password + salt)   
                 db.execute('UPDATE user SET password=?, salt=? WHERE id=?', (hashP, salt, attempt['userid']))
@@ -220,7 +223,8 @@ def forgot():
                     (utils.F_INACTIVE, user['id'])
                 )
                 db.execute(
-                    'INSERT INTO forgotlink (userid,challenge,state) VALUES(?,?,?)',(user['id'], number, utils.F_ACTIVE)
+                    'INSERT INTO forgotlink (userid,challenge,state) VALUES(?,?,?)',
+                    (user['id'], number, utils.F_ACTIVE)
                 )
                 db.commit()
                 
